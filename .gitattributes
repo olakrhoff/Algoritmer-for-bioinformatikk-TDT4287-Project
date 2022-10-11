@@ -1,0 +1,2 @@
+handout/MultiplexedSamples filter=lfs diff=lfs merge=lfs -text
+handout/tdt4287-unknown-adapter.txt filter=lfs diff=lfs merge=lfs -text
