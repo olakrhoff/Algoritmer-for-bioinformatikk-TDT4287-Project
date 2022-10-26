@@ -47,5 +47,8 @@ def task1(primer_a, filename):
 if __name__ == '__main__':
     a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG"
     #task1(a, "../data/s_3_sequence_1M.txt")
-    suffixTree = SuffixTree("rrerirra")
+    #suffixTree = SuffixTree("rrerirra")
+    #suffixTree = SuffixTree("abcabxabcd")
+    suffixTree = SuffixTree("gctgcg")
     suffixTree.build()
+    print("kake")
