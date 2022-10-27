@@ -86,7 +86,6 @@ typedef class suffix_tree
         uint32_t m_remainder {0};
         char m_termination_char {*"$"};
         uint32_t m_num_sequence {0};
-        uint32_t m_j_i {0};
         
     public:
         suffix_tree(std::string a_text, char a_termination_char) : m_text(std::move(a_text)), m_termination_char(a_termination_char)
@@ -231,114 +230,7 @@ typedef class suffix_tree
             return suffix;
         }
         
-        void construct(std::string data)
-        {
-            //Construct I_1
-            m_root.add_child(new node_t(0, 0, &m_end_pointers[m_num_sequence], m_num_sequence, &m_root, nullptr, {})); //Add a leaf node
-            m_text += data.at(0);
-            m_active_point = active_point_t(&m_root, *"\0", 0);
-            for (int i = 0; i < data.length() - 1; ++i)
-            {
-                m_text += data.at(i + 1);
-                char letter = m_text[i + 1];
-                extend(letter);
-            }
-        }
-        
-        void extend(char letter)
-        {
-            uint32_t i = m_text.length() - 2;
-            m_end_pointers[m_num_sequence] = i + 1;
-            node_t *previous_node {nullptr};
-            for (int j = m_j_i + 1; j <= i + 1; ++j)
-            {
-                if (traverse(letter))
-                    break;
-                else
-                {
-                    sea();
-                }
-            }
-            if (letter == m_termination_char) //We are finished with one string
-                ++m_num_sequence;
-        }
-        
     private:
-        void sea()
-        {
-            add_explicit_point(m_end_pointers[m_num_sequence]);
-            ++m_j_i;
-            char letter = m_text[m_end_pointers[m_num_sequence]];
-            while (true)
-            {
-                if (m_active_point.node == &m_root && m_active_point.length == 0)
-                    return;
-                
-                node_t *node_to {nullptr};
-                for (node_t *n: m_active_point.node->children)
-                    if (m_text[n->start] == m_active_point.edge)
-                    {
-                        node_to = n;
-                        break;
-                    }
-                if (node_to == nullptr)
-                    exit(9); //Not good
-    
-                if (get_label_length(node_to) < m_active_point.length)
-                    exit(10); //Bad
-    
-                node_t *v = m_active_point.node;
-                std::string gamma = m_text.substr(node_to->start, m_active_point.length);
-    
-                if (!v->is_leaf() && v != &m_root &&
-                    v->link != nullptr) //Checking that v is an internal node with suffix link
-                {
-                    walk(v->link, gamma);
-                    continue;
-                }
-                else
-                {
-                    auto k = m_text.length() - m_j_i - 3;
-                    walk(&m_root, m_text.substr(m_j_i + 2, m_text.length() - m_j_i - 3));
-                    add_explicit_point(m_end_pointers[m_num_sequence]);
-                    ++m_j_i;
-                    continue;
-                }
-                
-                //If rule 3: Path already here; end
-                return;
-            }
-        }
-        
-        void walk(node_t *start_node, std::string path)
-        {
-            uint32_t h {0};
-            while (true)
-            {
-                node_t *node_to {nullptr};
-                for (node_t *n: start_node->children)
-                    if (m_text[n->start] == path.at(h))
-                    {
-                        node_to = n;
-                        break;
-                    }
-                if (node_to == nullptr)
-                    exit(11); //Not good
-                    
-                if (get_label_length(node_to) > path.length())
-                {
-                    m_active_point = active_point_t(start_node, path.at(h), path.length() - h);
-                    return;
-                }
-                else
-                {
-                    start_node = node_to;
-                    h += get_label_length(node_to);
-                    
-                }
-            }
-        }
-        
         void check_active_point()
         {
             if (m_active_point.length == 0)
@@ -510,10 +402,8 @@ void task1(const std::string primer, std::string filepath)
         
         std::string text = primer;
         text += "$";// + sequence + "$";
-        //suffix_tree_t tree(text, *"$");
-        //tree.build();
-        suffix_tree_t tree("", *"$");
-        tree.construct("gctgc$");
+        suffix_tree_t tree(text, *"$");
+        tree.build();
         //std::cout << tree << std::endl;
         uint32_t suffix = tree.prefix_suffix_match(0, 1);
         while (length_of_matching_sequences.size() <= suffix)
