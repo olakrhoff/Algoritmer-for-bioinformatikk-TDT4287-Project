@@ -560,34 +560,23 @@ void task1(const std::string primer, std::string filepath)
         exit(EXIT_FAILURE);
     std::string sequence;
     std::vector<uint32_t> length_of_matching_sequences {};
-    uint64_t number_of_sequences {0};
     while (std::getline(in_fd, sequence))
     {
         if (sequence.empty())
             exit(5); //This should not happen
-        ++number_of_sequences;
+            
+        //suffix_tree_t tree("abcabxabcd$", *"$"); //Test
+        //suffix_tree_t tree("gctgca$tgc$", *"$"); //Test
         
-        bool match = false;
-        uint32_t offset {0};
-        for (int i = 0; i < sequence.length(); ++i)
-        {
-            char s = sequence.at(i);
-            char p = primer.at(offset);
-            if (sequence.at(i) == primer.at(offset))
-            {
-                ++offset;
-                match = true;
-            }
-            else
-            {
-                offset = 0;
-                match = false;
-            }
-        }
-        if (!match)
-            continue;
-        
-        uint64_t suffix = sequence.length() - offset;
+        std::string text = primer;
+        text += "$" + sequence + "$";
+        //suffix_tree_t tree(text, *"$");
+        //tree.build();
+        suffix_tree_t tree("", *"$");
+        //tree.construct("abcabxabcd$");
+        tree.construct(text);
+        //std::cout << tree << std::endl;
+        uint32_t suffix = tree.prefix_suffix_match(0, 1);
         while (length_of_matching_sequences.size() <= suffix)
             length_of_matching_sequences.emplace_back(0);
         ++length_of_matching_sequences.at(suffix); //Increment the observation of prefix suffix match length
@@ -595,7 +584,7 @@ void task1(const std::string primer, std::string filepath)
     in_fd.close();
     
     std::ofstream  out_fd;
-    out_fd.open("../../../data/task1_data.csv");
+    out_fd.open("../../../data/task1_data.txt");
     
     if (!out_fd.is_open())
         exit(EXIT_FAILURE);
@@ -603,18 +592,23 @@ void task1(const std::string primer, std::string filepath)
     for (int i = 0; i < length_of_matching_sequences.size(); ++i)
     {
         out_fd << length_of_matching_sequences[i];
-        out_fd << ",";
+        if (i < length_of_matching_sequences.size() - 1)
+            out_fd << ",";
     }
-    out_fd << number_of_sequences;
+    
     out_fd.close();
-    std::cout << "Number of sequences: " << number_of_sequences << std::endl;
 }
+
+namespace fs = std::filesystem;
 
 int main()
 {
     std::string a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
     
     task1(a, "../../../data/s_3_sequence_1M.txt");
+    
+    
+    
     
     return EXIT_SUCCESS;
 }

@@ -10,45 +10,55 @@
 # Print length of list -> number of sequences found
 # Plot dist. of values in list
 import matplotlib.pyplot as plt
-
+import csv
 from Utilities.SuffixTree import SuffixTree
 
 
-def task1(primer_a, filename):
+def task1(filename):
+
+    with open(filename, newline='') as f:
+        reader = csv.reader(f, quoting = csv.QUOTE_NONNUMERIC)
+        data = list(reader)
+
+    print(data)
+
     file = open(filename, "r")  # Open the data file
+    number_of_sequences = data[0][-1]
+    length_of_matching_sequences = data[0][0:-1]
 
-    # Create implicit suffix tree
-    suffixTree = SuffixTree()
-
-    suffixTree.add_sequence(primer_a + "$")
-
-    length_of_matching_sequences = []
-
-    while True:
-        sequence = file.readline()
-        if not sequence:
-            break  # Reached the end of the file
-        suffix_start = suffixTree.prefix_suffix_match(sequence)
-        while len(length_of_matching_sequences) < suffix_start:
-            length_of_matching_sequences.append(0)  # Expand the list so we can increment the correct index
-        length_of_matching_sequences[suffix_start] += 1  # Suffix start is equal to the length of the remaining sequence
-
+    number_of_matches = sum(length_of_matching_sequences)
     print("Number of perfect prefix-suffix-matches: ",
-          sum(length_of_matching_sequences))  # Since we increment index matching length the sum of the list will be equal to the number of matches
-
-    plt.plot(length_of_matching_sequences)
+          number_of_matches)  # Since we increment index matching length the sum of the list will be equal to the number of matches
+    print("Number of sequences in set: ", number_of_sequences)
+    percent = "{:2.1f}".format(100 * number_of_matches / number_of_sequences)
+    label = str("Total number of perfecrt matches: " + str(int(number_of_matches)) + ": " + percent + "% of set")
+    plt.plot(length_of_matching_sequences, label=label)
+    plt.legend()
     plt.ylabel("Occurrences")
     plt.xlabel("Length of sequence without adapter")
     plt.title("Length distribution of sequences without perfect prefix-suffix-matching adapter")
 
+    plt.savefig("../plots/task1_distribution")
+
+    plt.show()
+
+    number_of_sequences = data[0][-1]
+    length_of_matching_sequences = data[0][1:-3]
+    number_of_matches = sum(length_of_matching_sequences)
+    percent = "{:2.1f}".format(100 * number_of_matches / number_of_sequences)
+    label = str("Total number of perfecrt matches: " + str(int(number_of_matches)) + ": " + percent + "% of set")
+    plt.plot(length_of_matching_sequences, label=label)
+    plt.legend(loc="upper left")
+    plt.ylabel("Occurrences")
+    plt.xlabel("Length of sequence without adapter")
+    plt.title("Length distribution of sequences without perfect prefix-suffix-matching adapter")
+
+    plt.savefig("../plots/task1_distribution_edit")
+
     plt.show()
 
 
+
 if __name__ == '__main__':
-    a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG"
-    #task1(a, "../data/s_3_sequence_1M.txt")
-    #suffixTree = SuffixTree("rrerirra")
-    #suffixTree = SuffixTree("abcabxabcd")
-    suffixTree = SuffixTree("gctgcg")
-    suffixTree.build()
-    print("kake")
+    task1("../data/task1_data.csv")
+    print("Done")
