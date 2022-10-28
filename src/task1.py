@@ -20,7 +20,7 @@ def task1(filename):
         reader = csv.reader(f, quoting = csv.QUOTE_NONNUMERIC)
         data = list(reader)
 
-    print(data)
+    #print(data)
 
     file = open(filename, "r")  # Open the data file
     number_of_sequences = data[0][-1]
