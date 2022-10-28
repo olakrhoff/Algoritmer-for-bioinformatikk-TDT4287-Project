@@ -2,3 +2,6 @@
 .DS_Store
 .idea
 data/*
+plots/*
+cmake-build-debug
+__pycache__
