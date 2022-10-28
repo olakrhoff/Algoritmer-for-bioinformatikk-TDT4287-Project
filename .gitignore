@@ -3,5 +3,6 @@
 .idea
 data/*
 plots/*
+src/bin/*
 cmake-build-debug
 __pycache__

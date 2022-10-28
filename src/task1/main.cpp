@@ -557,7 +557,7 @@ void task1(const std::string primer, std::string filepath)
     in_fd.open(filepath);
     
     if (!in_fd.is_open())
-        exit(EXIT_FAILURE);
+        exit(44);
     std::string sequence;
     std::vector<uint32_t> length_of_matching_sequences {};
     uint64_t number_of_sequences {0};
@@ -595,10 +595,10 @@ void task1(const std::string primer, std::string filepath)
     in_fd.close();
     
     std::ofstream  out_fd;
-    out_fd.open("../../../data/task1_data.csv");
+    out_fd.open("data/task1_data.csv");
     
     if (!out_fd.is_open())
-        exit(EXIT_FAILURE);
+        exit(45);
     
     for (int i = 0; i < length_of_matching_sequences.size(); ++i)
     {
@@ -614,7 +614,7 @@ int main()
 {
     std::string a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
     
-    task1(a, "../../../data/s_3_sequence_1M.txt");
+    task1(a, "data/s_3_sequence_1M.txt");
     
     return EXIT_SUCCESS;
 }

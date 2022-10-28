@@ -38,9 +38,9 @@ def task1(filename):
     plt.xlabel("Length of sequence without adapter")
     plt.title("Length distribution of sequences without perfect prefix-suffix-matching adapter")
 
-    plt.savefig("../plots/task1_distribution")
+    plt.savefig("plots/task1_distribution")
 
-    plt.show()
+    plt.close()
 
     number_of_sequences = data[0][-1]
     length_of_matching_sequences = data[0][1:-3]
@@ -53,12 +53,10 @@ def task1(filename):
     plt.xlabel("Length of sequence without adapter")
     plt.title("Length distribution of sequences without perfect prefix-suffix-matching adapter")
 
-    plt.savefig("../plots/task1_distribution_edit")
-
-    plt.show()
+    plt.savefig("plots/task1_distribution_edit")
 
 
 
 if __name__ == '__main__':
-    task1("../data/task1_data.csv")
+    task1("data/task1_data.csv")
     print("Done")
