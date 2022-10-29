@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 
 # Without indels
 # k = x% of |a| (mismatches)
@@ -32,6 +32,7 @@
 #
 import math
 import sys
+import threading
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -163,9 +164,6 @@ def ED(S, R, k):
             if table[row, col] <= k:
                 still_valid = True
                 break
-        if not still_valid:
-            start_bt_col = inner_col
-            break
         for inner_row in range(row + 1, rows):
             if table[inner_row, inner_col] <= k:
                 still_valid = True
@@ -174,7 +172,7 @@ def ED(S, R, k):
             start_bt_col = inner_col
             break
         inner_col += 1
-
+        still_valid = False
     # Save format
     #tableData = np.zeros(shape=(len(R) + 2, len(S) + 2), dtype=np.dtype('U100'))
     #
@@ -222,16 +220,40 @@ def back_track(matrix, row, col, S, R):
     suffix = row - 1
     return hits, suffix
 
+def indel_do_sequence(primer, sequences, k, list, lock):
+    length_list = {}
+    #for sequence in sequences:
+    while len(sequences) > 0:
+        sequence = sequences.pop()
+        print(len(sequences))
+        matrix, start_bt_col = ED(primer, sequence, k)
+        # matrix = ED("GGC", "CTCTAGC", 1)
+        for col in range(start_bt_col, 2, -1):
+            row = matrix.shape[0] - 1
+            if matrix[row, col] > k:
+                continue
+            hits, suffix = back_track(matrix, row, col, primer, sequence)
+            if hits > 3:
+                if suffix in length_list:
+                    length_list[suffix] += 1
+                else:
+                    length_list[suffix] = 1
+                s = sum(length_list)
+                if s % 100 == 0:
+                    print(len(sequences))
+                break
+    print("Done, writing to summary")
+    lock.acquire()
+    for i in range(len(length_list)):
+        while len(list) <= i:
+            list.append(0)
+        length_list[suffix] += length_list[i]
+    lock.release()
 
-# With indels
-# k = x% of |a| (mismatches)
-# for s in S
-#   table = ED(a, s, k) //optimize by red square theorem
-#   for i = |a| to 0 //Loop through last row
-#       if table[|s|, i] <= k
-#           add to list backtrack_find_first_col_ret_row_num(|s|, i) - 1
-#           break
-#
+def split(list, n):
+    k, m = divmod(len(list), n)
+    return [list[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n)]
+
 def task2_indel(a, percent_error, filepath):
     # Using readline()
     file = open(filepath, 'r')
@@ -239,30 +261,40 @@ def task2_indel(a, percent_error, filepath):
     length_of_sequences = []
     length_of_sequences_edit = []
     k = math.floor(len(a) * percent_error)  # Number of mismatches allowed
+
+    list_lock = threading.Lock()
+    sequences = list()
+    print("Reading file...")
     while True:
         count += 1
-        if count % 10000 == 0:
-            print("{:2.1f}".format(100 * count / 1e6) + "%")
+        #if count % 10000 == 0:
+            #print("{:2.1f}".format(100 * count / 1e6) + "%")
         # Get next line from file
         sequence = file.readline()
-
+        sequences.append(sequence)
         # if line is empty
         # end of file is reached
         if not sequence:
             break
+    print("File read")
+        #x = threading.Thread(target=indel_do_sequence, args=(a, sequence, k, length_of_sequences_edit, list_lock))
+        #threads.append(x)
+        #x.start()
+        #hits, suffix = indel_do_sequence(a, sequence, k)
 
-        matrix, start_bt_col = ED(a, sequence, k)
-        #matrix = ED("GGC", "CTCTAGC", 1)
-        for col in range(start_bt_col, 2, -1):
-            row = matrix.shape[0] - 1
-            if matrix[row, col] > k:
-                continue
-            hits, suffix = back_track(matrix, row, col, a, sequence)
-            if hits > 3:
-                while len(length_of_sequences_edit) <= suffix:
-                    length_of_sequences_edit.append(0)
-                length_of_sequences_edit[suffix] += 1
-                break
+    #for thread in threads:
+        #x.join()
+    num_threads = 1
+    workloads = split(sequences, num_threads)
+
+    threads = []
+    for t in range(num_threads):
+        x = threading.Thread(target=indel_do_sequence, args=(a, workloads[t], k, length_of_sequences_edit, list_lock))
+        threads.append(x)
+        x.start()
+
+    for t in threads:
+        t.join()
 
     file.close()
     number_of_sequences = count
@@ -288,8 +320,8 @@ if __name__ == '__main__':
     a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG"
     #task2(a, 0.1, "data/s_3_sequence_1M.txt")
     #task2(a, 0.25, "data/s_3_sequence_1M.txt")
-
-    task2_indel(a, 0.1, "../data/s_3_sequence_1M.txt")
-    task2_indel(a, 0.25, "../data/s_3_sequence_1M.txt")
+    print("Starting")
+    task2_indel(a, 0.1, "data/s_3_sequence_1M.txt")
+    task2_indel(a, 0.25, "data/s_3_sequence_1M.txt")
 
     print("Done")
