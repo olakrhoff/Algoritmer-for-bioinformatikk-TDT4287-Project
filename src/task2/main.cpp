@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <atomic>
+#include <set>
 
 template<typename T>
 struct matrix_t
@@ -203,6 +204,8 @@ BT_data_t back_track(matrix_t<uint32_t> *matrix, uint32_t row, uint32_t col, con
 
 void task2(const std::string primer, double percent, std::string filepath)
 {
+    std::set<std::pair<uint32_t, uint32_t>> set_of_sequence_suffix_pairs;
+    
     std::ifstream in_fd;
     in_fd.open(filepath);
     
@@ -243,6 +246,7 @@ void task2(const std::string primer, double percent, std::string filepath)
             BT_data_t data_BT /*hits, suffix*/ = back_track(data_ED.matrix, row, col, primer, s);
             if (data_BT.hits > 3)
             {
+                set_of_sequence_suffix_pairs.insert(std::make_pair<uint32_t, uint32_t>(count - 1, data_BT.suffix));
                 while (length_of_matching_sequences.size() <= data_BT.suffix)
                     length_of_matching_sequences.emplace_back(0);
                 length_of_matching_sequences[data_BT.suffix] += 1;
@@ -254,7 +258,8 @@ void task2(const std::string primer, double percent, std::string filepath)
     
     
     std::ofstream  out_fd;
-    std::string filename = "../../../data/task2_data_" + std::to_string((uint16_t)(percent * 100)) + ".csv";
+    //std::string filename = "../../../data/task2_data_" + std::to_string((uint16_t)(percent * 100)) + ".csv";
+    std::string filename = "data/task2_data_" + std::to_string((uint16_t)(percent * 100)) + ".csv";
     out_fd.open(filename);
     
     if (!out_fd.is_open())
@@ -268,14 +273,31 @@ void task2(const std::string primer, double percent, std::string filepath)
     out_fd << number_of_sequences;
     out_fd.close();
     std::cout << "Number of sequences: " << number_of_sequences << std::endl;
+    
+    //std::string filename = "../../../data/task2_data_" + std::to_string((uint16_t)(percent * 100)) + ".csv";
+    filename = "data/task2_data_" + std::to_string((uint16_t)(percent * 100)) + "_suffix.csv";
+    out_fd.open(filename);
+    
+    if (!out_fd.is_open())
+        exit(45);
+    
+    std::cout << "Writing set of <sequence number, suffix number>" << std::endl;
+    for (auto itr = set_of_sequence_suffix_pairs.begin(); itr != set_of_sequence_suffix_pairs.end(); itr++)
+    {
+        out_fd << (*itr).first << "," << (*itr).second << "\n";
+    }
+    out_fd << number_of_sequences;
+    out_fd.close();
 }
 
 int main()
 {
     std::string a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
     
-    task2(a, 0.1, "../../../data/s_3_sequence_1M.txt");
-    task2(a, 0.25, "../../../data/s_3_sequence_1M.txt");
+    //task2(a, 0.1, "../../../data/s_3_sequence_1M.txt");
+    task2(a, 0.1, "data/s_3_sequence_1M.txt");
+    //task2(a, 0.25, "../../../data/s_3_sequence_1M.txt");
+    task2(a, 0.25, "data/s_3_sequence_1M.txt");
     
     return EXIT_SUCCESS;
 }

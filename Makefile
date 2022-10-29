@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -std=c++20
 
 CURDIR = $(PWD)
-.PHONY: setup task1 clean run1 run2 run_all
+.PHONY: setup task1 task2 clean run1 run2 run_all
 
 setup:
 	mkdir -p plots data src/bin
@@ -15,6 +15,9 @@ setup:
 task1:
 	$(CC) $(CFLAGS) $(CURDIR)/src/task1/main.cpp -o $(CURDIR)/src/bin/task1
 
+task2:
+	$(CC) $(CFLAGS) $(CURDIR)/src/task2/main.cpp -o $(CURDIR)/src/bin/task2
+
 clean:
 	$(ECHO $(CURDIR))
 	-rm -f $(CURDIR)/src/bin/*
@@ -23,7 +26,8 @@ run1: task1
 	./src/bin/task1
 	python3 src/task1.py
 
-run2: 
+run2: task2
+	./src/bin/task2
 	python3 src/task2.py
 
 run_all: clean run1 run2
