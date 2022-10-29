@@ -11,7 +11,6 @@
 # Plot dist. of values in list
 import matplotlib.pyplot as plt
 import csv
-from Utilities.SuffixTree import SuffixTree
 
 
 def task1(filename):
