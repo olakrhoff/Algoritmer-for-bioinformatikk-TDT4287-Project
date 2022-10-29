@@ -99,7 +99,7 @@ def plot_estimate(x, y, func, func_inv, name, model):
     plt.plot(t_1, fit_y, '-', label=f'{model}')
     plt.legend()
 
-    plt.savefig(f"../plots/task3_estimate_{name}")
+    plt.savefig(f"plots/task3_estimate_{name}")
     plt.close()
 
 def plot_distribution(dist, percent):
@@ -112,7 +112,7 @@ def plot_distribution(dist, percent):
     plt.xlabel("Index in adapter/primer")
     plt.title(f"Distribution of nucleotide errors in\nsequences suffix with prefix of adapter for {(percent * 100):.0f}%")
     plt.legend(["Sequencing errors", "k + 3", "k + 10"], loc="upper right")
-    plt.savefig(f"../plots/task3_distribution_errors_{(percent * 100):.0f}")
+    plt.savefig(f"plots/task3_distribution_errors_{(percent * 100):.0f}")
     plt.close()
 
 if __name__ == '__main__':
@@ -140,8 +140,8 @@ if __name__ == '__main__':
     data = []
 
 
-    #with open("../data/task2_data_10_suffix.csv", "r") as f:
-    with open("../data/task2_data_10_suffix.csv", newline="") as csv_file:
+    #with open("data/task2_data_10_suffix.csv", "r") as f:
+    with open("data/task2_data_10_suffix.csv", newline="") as csv_file:
         csv_reader = csv.reader(csv_file, quoting=csv.QUOTE_NONNUMERIC)
         data = list(csv_reader)
     print("Read file")
@@ -149,14 +149,14 @@ if __name__ == '__main__':
     #data => {sequence_num, suffix_start}
     case10 = data  # indices of suffix for each sequence with 10% error rate
 
-    with open("../data/task2_data_25_suffix.csv", newline="") as csv_file:
+    with open("data/task2_data_25_suffix.csv", newline="") as csv_file:
         csv_reader = csv.reader(csv_file, quoting=csv.QUOTE_NONNUMERIC)
         data = list(csv_reader)
     print("Read file")
     case25 = data  # indices of suffix for each sequence with 25% error rate
 
     sequences = []
-    with open("../data/s_3_sequence_1M.txt", "r") as file:
+    with open("data/s_3_sequence_1M.txt", "r") as file:
         sequences = file.read().splitlines()
 
 

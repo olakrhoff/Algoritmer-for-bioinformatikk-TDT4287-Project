@@ -5,4 +5,5 @@ data/*
 plots/*
 src/bin/*
 cmake-build-debug
+cmake-build-release
 __pycache__
