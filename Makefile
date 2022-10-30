@@ -19,7 +19,7 @@ task2:
 	$(CC) $(CFLAGS) $(CURDIR)/src/task2/main.cpp -o $(CURDIR)/src/bin/task2
 
 task4:
-	$(CC) $(CFLAGS) $(CURDIR)/src/task4/main.cpp -o $(CURDIR)/src/bin/task4
+	$(CC) $(CFLAGS) $(CURDIR)/src/task4/main.cpp $(CURDIR)/src/task4/keyword_tree.cpp -o $(CURDIR)/src/bin/task4
 
 clean:
 	$(ECHO $(CURDIR))
