@@ -1,6 +1,23 @@
 #include <iostream>
 #include <map>
+#include <list>
 #include "../task4/keyword_tree.cpp"
+
+uint32_t hamming_distance(const std::string& reference, const std::string& potential_match, uint32_t bound)
+{
+    if (reference.length() != potential_match.length())
+        exit(123); //The lengths must be equal, just for practicality for now at least
+    uint32_t distance {};
+    for (int i = 0; i < reference.length(); ++i)
+        if (reference[i] != potential_match[i])
+        {
+            ++distance;
+            if (distance >= bound)
+                return distance;
+        }
+        
+    return distance;
+}
 
 void task5(std::string filepath, double certainty, std::string write_dir)
 {
@@ -11,6 +28,8 @@ void task5(std::string filepath, double certainty, std::string write_dir)
     if (!fd_in.is_open())
         exit(55);
     
+    //TODO: If the performance of this becomes a bottleneck, try switching the
+    //      std::strings in the keyword tree nodes, with the light_string_t type in the same file
     std::string sequence {};
     uint64_t number_of_sequences {0};
     std::cout << "Constructing keyword tree..." << std::endl;
@@ -115,10 +134,46 @@ void task5(std::string filepath, double certainty, std::string write_dir)
     fd_out.close();
     
     //TODO: Now that we have the frequency of the barcodes, we can use these to separate the set into samples.
+    
     //TODO: Start by taking the most frequent barcode and create a sample of all the sequences that has that barcode
     //      with a hamming distance of ≤2. (Possibly write the sample to file to have better runtime of memory).
     //      Continue creating samples of the next most frequent barcode. Do this until the most frequent barcode
     //      is within 10% of the median barcode frequency. OR until we have put ≥95%(?) of the sequence set into samples.
+    
+    std::cout << "Sampling sequences based on barcodes..." << std::endl;
+    uint16_t num_sample {}; //There will not be more than >65.000 samples, but there will always be at least one
+    std::vector<std::pair<std::string, uint32_t>> barcodes(frequency_dist.begin(), frequency_dist.end());
+    std::sort(barcodes.begin(), barcodes.end(), [](auto a, auto b){ return a.second > b.second; });
+    std::pair<std::string, uint32_t> barcode = barcodes.at(num_sample);
+    //Since we are going to erase element whilst looping we want a non-continuous data structure, so we have
+    //O(1) deletion time, and not O(n) as with a vector, hens the conversion to a list (linked-list).
+    std::list<std::string> adapterless_sequences_list(adapterless_sequences.begin(), adapterless_sequences.end());
+    adapterless_sequences.clear(); //Free the memory of storing all these values
+    uint64_t total_num_of_sequences = adapterless_sequences_list.size();
+    uint32_t median_barcode_frequency = barcodes.at(barcodes.size() / 2).second;
+    std::vector<std::vector<std::string>> samples {};
+    do
+    {
+        std::cout << "Sampling barcode: " << barcode.first << " (" << num_sample << ")" << std::endl;
+        samples.emplace_back(std::vector<std::string>()); //Add new sample to samples
+        for (auto itr = adapterless_sequences_list.begin(); itr != adapterless_sequences_list.end(); itr++)
+        {
+            //Expect that all sequences are long enough to be sub-stringed
+            std::string bar = (*itr).substr((*itr).length() - BARCODE_LENGTH);
+            if (hamming_distance(barcode.first, bar, 3) <= 2) //We found a match
+            {
+                std::string seq = (*itr).substr(0, (*itr).length() - BARCODE_LENGTH);
+                samples.back().emplace_back(seq); //Add sequence to the sample
+                itr = adapterless_sequences_list.erase(itr); //Remove the sequence from the total list and update the iterator to not destroy the loop
+            }
+        }
+        
+        ++num_sample;
+        if (barcodes.size() <= num_sample)
+            break; //We have used all the barcodes, probably won't happen, but just to be sure
+        barcode = barcodes.at(num_sample);
+    } while (barcode.second >= median_barcode_frequency * 1.1 && (double)adapterless_sequences.size() / total_num_of_sequences <= 0.05);
+    
     
     //TODO: Once the de-multiplexing is done and we have our samples, we can count the number os sequences in the samples.
     //      Then write data to be plotted as [barcode, number of sequences with barcode].
