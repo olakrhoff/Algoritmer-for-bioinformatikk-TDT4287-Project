@@ -6,6 +6,15 @@
 #include <utility>
 #include <vector>
 
+#include <sys/time.h>
+#define WALLTIME(t) ((double)(t).tv_sec + 1e-6 * (double)(t).tv_usec)
+
+struct timeval
+        t_start,
+        t_stop;
+double
+    t_total;
+
 typedef struct node
 {
     uint32_t start {}, end {}, *end_p {}, string_id {};
@@ -614,7 +623,13 @@ int main()
 {
     std::string a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
     
+    gettimeofday(&t_start, NULL);
+    
     task1(a, "data/s_3_sequence_1M.txt");
+    
+    gettimeofday(&t_stop, NULL);
+    t_total = WALLTIME(t_stop) - WALLTIME(t_start);
+    printf("%.2lf seconds total runtime\n", t_total);
     
     return EXIT_SUCCESS;
 }

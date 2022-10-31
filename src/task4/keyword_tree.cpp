@@ -226,8 +226,19 @@ typedef class suffix_tree
             //return a_node->end - a_node->start + 1;
             return a_node->label.length();
         }
-    
-    public:
+        
+        public:
+        
+        uint32_t get_label_length_to_root(node_t *a_node)
+        {
+            uint32_t length {};
+            while (a_node != &m_root)
+            {
+                length += get_label_length(a_node);
+                a_node = a_node->parent;
+            }
+            return length;
+        }
         
         void add_sequence(std::string a_sequence)
         {
@@ -268,6 +279,36 @@ typedef class suffix_tree
                 }
                 if (sequences_reached)
                     break;
+            }
+            std::reverse(adapter.begin(), adapter.end());
+            
+            return adapter;
+        }
+        
+        std::string get_most_frequant_sequence(uint32_t min_length)
+        {
+            m_active_point.set_to_node(&m_root, false);
+            std::string adapter {};
+            while (!m_active_point.node->is_leaf())
+            {
+                /*node_t *best_child = *std::max_element(m_active_point.node->children.begin(), m_active_point.node->children.end(), [](auto a, auto b)
+                {
+                    return a->passes >= b->passes;
+                });*/
+                std::sort(m_active_point.node->children.begin(), m_active_point.node->children.end(), [](auto a, auto b)
+                {
+                    return a->passes >= b->passes;
+                });
+                node_t *best_child = m_active_point.node->children[0];
+                if (best_child->is_leaf() &&
+                    best_child->parent == &m_root &&
+                    get_label_length(best_child) < min_length &&
+                    m_root.children.size() > 1)
+                {
+                    best_child = m_active_point.node->children[1];
+                }
+                m_active_point.set_to_node(best_child, false);
+                adapter += get_label(best_child);
             }
             std::reverse(adapter.begin(), adapter.end());
             
