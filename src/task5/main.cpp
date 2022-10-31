@@ -3,6 +3,15 @@
 #include <list>
 #include "../task4/keyword_tree.cpp"
 
+#include <sys/time.h>
+#define WALLTIME(t) ((double)(t).tv_sec + 1e-6 * (double)(t).tv_usec)
+
+struct timeval
+        t_start,
+        t_stop;
+double
+t_total;
+
 uint32_t hamming_distance(const std::string& reference, const std::string& potential_match, uint32_t bound)
 {
     if (reference.length() != potential_match.length())
@@ -105,7 +114,7 @@ void task5(std::string filepath, double certainty, std::string write_dir)
     
     //STEP 1.3: With the subset of sequences, they shall represent the total set
     //Find the frequency distribution of the barcode
-    #define BARCODE_LENGTH 6
+    #define BARCODE_LENGTH 8
     
     std::map<std::string, uint32_t> frequency_dist {};
     
@@ -127,18 +136,19 @@ void task5(std::string filepath, double certainty, std::string write_dir)
     
     for (auto itr = frequency_dist.begin(); itr != frequency_dist.end();)
     {
-        fd_out << itr->second;
+        fd_out << (double)itr->second / adapterless_sequences.size();
         if (itr++ != frequency_dist.end())
             fd_out << ",";
     }
     fd_out.close();
     
-    //TODO: Now that we have the frequency of the barcodes, we can use these to separate the set into samples.
+    //Now that we have the frequency of the barcodes, we can use these to separate the set into samples.
     
-    //TODO: Start by taking the most frequent barcode and create a sample of all the sequences that has that barcode
-    //      with a hamming distance of ≤2. (Possibly write the sample to file to have better runtime of memory).
-    //      Continue creating samples of the next most frequent barcode. Do this until the most frequent barcode
-    //      is within 10% of the median barcode frequency. OR until we have put ≥95%(?) of the sequence set into samples.
+    //Start by taking the most frequent barcode and create a sample of all the sequences that has that barcode
+    //with a hamming distance of ≤2. (Possibly write the sample to file to have better runtime of memory).
+    //Continue creating samples of the next most frequent barcode. Do this until the most frequent barcode
+    //is less than a given amount set by analyzing the data (by eyes) times greater than the median barcode frequency.
+    //OR until we have put ≥95%(?) of the sequence set into samples.
     
     std::cout << "Sampling sequences based on barcodes..." << std::endl;
     uint16_t num_sample {}; //There will not be more than >65.000 samples, but there will always be at least one
@@ -152,52 +162,111 @@ void task5(std::string filepath, double certainty, std::string write_dir)
     uint64_t total_num_of_sequences = adapterless_sequences_list.size();
     uint32_t median_barcode_frequency = barcodes.at(barcodes.size() / 2).second;
     std::vector<std::vector<std::string>> samples {};
+    
+    std::cout << "Barcode median frequency: " << median_barcode_frequency << std::endl;
+    
     do
     {
-        std::cout << "Sampling barcode: " << barcode.first << " (" << num_sample << ")" << std::endl;
+        std::cout << "Sampling barcode: " << barcode.first << " (" << num_sample << "), " << barcode.second; // << std::endl;
         samples.emplace_back(std::vector<std::string>()); //Add new sample to samples
         for (auto itr = adapterless_sequences_list.begin(); itr != adapterless_sequences_list.end(); itr++)
         {
             //Expect that all sequences are long enough to be sub-stringed
             std::string bar = (*itr).substr((*itr).length() - BARCODE_LENGTH);
-            if (hamming_distance(barcode.first, bar, 3) <= 2) //We found a match
+            if (hamming_distance(barcode.first, bar, 4) <= 3) //We found a match
             {
                 std::string seq = (*itr).substr(0, (*itr).length() - BARCODE_LENGTH);
                 samples.back().emplace_back(seq); //Add sequence to the sample
                 itr = adapterless_sequences_list.erase(itr); //Remove the sequence from the total list and update the iterator to not destroy the loop
             }
         }
-        
+        std::cout << ", " << (double)samples.back().size() / total_num_of_sequences << std::endl;
         ++num_sample;
         if (barcodes.size() <= num_sample)
             break; //We have used all the barcodes, probably won't happen, but just to be sure
         barcode = barcodes.at(num_sample);
-    } while (barcode.second >= median_barcode_frequency * 1.1 && (double)adapterless_sequences.size() / total_num_of_sequences <= 0.05);
+    } while ((double)barcode.second / total_num_of_sequences >= 0.02 && (double)adapterless_sequences.size() / total_num_of_sequences <= 0.05);
+    uint32_t sum {};
+    for (auto sam : samples)
+        sum += sam.size();
+    std::cout << "Percent of original set found to barcodes: " << (double)sum / total_num_of_sequences << std::endl;
     
-    
-    //TODO: Once the de-multiplexing is done and we have our samples, we can count the number os sequences in the samples.
-    //      Then write data to be plotted as [barcode, number of sequences with barcode].
-    
-    
-    //TODO: While counting the number of sequences in the sample we can also note the length distribution of the
-    //      sequences in each sample. Then write this distribution to file so it can be plotted.
-    
-    //TODO: Also while processing the sample, put the sequences into a keyword tree (as done earlier, above).
-    //      With the whole tree created traverse it to a leaf node, following the most used path, this will
+    //TODO: Create a keyword tree for each sample; find length distribution of the sequences by DFS.
+    //      Then write this distribution to file so it can be plotted.
+    //      With the tree traverse it to a leaf node, following the most used path, this will
     //      give us the most frequent sequence in the sample.
     
+    //for (std::vector<std::string> sample : samples)
+    for (int i = 0; i < samples.size(); ++i)
+    {
+        std::vector<std::string> sample = samples.at(i);
+        keyword_tree_t sample_tree(*"$");
+        //Finding frequency distribution for sample
+        std::vector<uint32_t> length_dist {};
+        
+        for (std::string seq : sample)
+        {
+            sample_tree.add_sequence(seq); //Building keyword tree at the same time
+            uint32_t length = seq.length();
+            while (length_dist.size() <= length)
+                length_dist.emplace_back(0);
+            ++length_dist.at(length);
+        }
+        /*std::vector<node_t *> stack {};
+        stack.push_back(sample_tree.get_root()); //Important that this is not changed since the adapter was found
     
-    //TODO: CONGRATULATIONS YOU ARE DONE, NOW PLOT YOUR DATA IN PYTHON, IF YOU HAVEN'T ALREADY AND CELEBRATE
+        std::cout << "Finding frequency distribution for sample " << i << ": " << barcodes.at(i).first << std::endl;
+        while (!stack.empty())
+        {
+            node_t *current_node = stack.back();
+            stack.pop_back();
+            for (node_t *child : current_node->children)
+                stack.push_back(child);
+            if (current_node->is_leaf())
+            {
+                uint32_t length = sample_tree.get_label_length_to_root(current_node);
+                //TODO: DEBUG HERE, why is there only one length
+                while (length_dist.size() <= length)
+                    length_dist.emplace_back(0);
+                length_dist.at(length) += current_node->passes;
+            }
+        }*/
+        
+        fd_out.open(write_dir + "task5_data_freq_dist_sample_" + std::to_string(i) + ".csv");
+        if (!fd_out.is_open())
+            exit(78);
+        std::cout << "Sample best sequence: " << sample_tree.get_most_frequant_sequence(2).substr(1) << std::endl;
+        fd_out << sample_tree.get_most_frequant_sequence(2).substr(1) << ",";
+        for (int i = 0; i < length_dist.size(); ++i)
+        {
+            fd_out << length_dist[i];
+            if (i < length_dist.size() - 1)
+                fd_out << ",";
+        }
+        fd_out.close();
+    }
+    
+    
+    //TODO: CONGRATULATIONS YOU ARE DONE, NOW PLOT YOUR DATA IN PYTHON, IF YOU HAVEN'T ALREADY, AND CELEBRATE
     
 }
 
 
 int main()
 {
-    std::string write_dir = "../../../data/";
-    std::string multiplexed_file = "../../../data/MultiplexedSamples.txt";
-    std::cout << "Starting task 4" << std::endl;
+    std::string write_dir = "data/";
+    std::string multiplexed_file = "data/MultiplexedSamples.txt";
+    std::cout << "Starting task 5" << std::endl;
+    
+    gettimeofday(&t_start, NULL);
+    
     task5(multiplexed_file,  0.5, write_dir);
+    
+    gettimeofday(&t_stop, NULL);
+    t_total = WALLTIME(t_stop) - WALLTIME(t_start);
+    printf("%.2lf seconds total runtime\n", t_total);
+    
     std::cout << "Complete" << std::endl;
+    
     return EXIT_SUCCESS;
 }

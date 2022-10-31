@@ -4,6 +4,15 @@
 #include <atomic>
 #include <set>
 
+#include <sys/time.h>
+#define WALLTIME(t) ((double)(t).tv_sec + 1e-6 * (double)(t).tv_usec)
+
+struct timeval
+        t_start,
+        t_stop;
+double
+t_total;
+
 template<typename T>
 struct matrix_t
 {
@@ -231,9 +240,6 @@ void task2(const std::string primer, double percent, std::string filepath)
     //#pragma omp parallel for
     for (std::string s : sequences)
     {
-        ++count;
-        if (count % 10000 == 0)
-            printf("%d\n", count);
         ED_data_t data_ED /*matrix, start_bt_col*/ = edit_distance(primer, s, k);
         //std::cout << data_ED.matrix << std::endl;
         for (int col = data_ED.start_bt_col; col > 1; --col)
@@ -294,10 +300,23 @@ int main()
 {
     std::string a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
     
+    
+    gettimeofday(&t_start, NULL);
     //task2(a, 0.1, "../../../data/s_3_sequence_1M.txt");
     task2(a, 0.1, "data/s_3_sequence_1M.txt");
+    
+    gettimeofday(&t_stop, NULL);
+    t_total = WALLTIME(t_stop) - WALLTIME(t_start);
+    printf("%.2lf seconds total runtime 10\n", t_total);
+    
+    
+    gettimeofday(&t_start, NULL);
     //task2(a, 0.25, "../../../data/s_3_sequence_1M.txt");
     task2(a, 0.25, "data/s_3_sequence_1M.txt");
+    
+    gettimeofday(&t_stop, NULL);
+    t_total = WALLTIME(t_stop) - WALLTIME(t_start);
+    printf("%.2lf seconds total runtime 25\n", t_total);
     
     return EXIT_SUCCESS;
 }

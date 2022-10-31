@@ -5,6 +5,15 @@
 #include <vector>
 #include "keyword_tree.cpp"
 
+#include <sys/time.h>
+#define WALLTIME(t) ((double)(t).tv_sec + 1e-6 * (double)(t).tv_usec)
+
+struct timeval
+        t_start,
+        t_stop;
+double
+t_total;
+
 void task4(std::string filepath, std::string name, double certainty)
 {
     keyword_tree_t tree(*"$");
@@ -132,7 +141,16 @@ int main()
     std::string s_3_file = "data/s_3_sequence_1M.txt";
     std::string seq_file = "data/seqset3.txt";
     std::cout << "Starting task 4" << std::endl;
+ 
+    gettimeofday(&t_start, NULL);
+    
+    
     task4(tdt_file, "tdt", 0.7);
+    
+    gettimeofday(&t_stop, NULL);
+    t_total = WALLTIME(t_stop) - WALLTIME(t_start);
+    printf("%.2lf seconds total runtime\n", t_total);
+    
     std::cout << "\n\n--------------------------------\n\n";
     task4(s_3_file, "s_3", 0.5);
     std::cout << "\n\n--------------------------------\n\n";

@@ -47,8 +47,6 @@ def task2(a, percent_error, filepath):
     k = math.floor(len(a) * percent_error)  # Number of mismatches allowed
     while True:
         count += 1
-        if count % 10000 == 0:
-            print(count)
         # Get next line from file
         sequence = file.readline()
 
@@ -267,7 +265,7 @@ def split(list, n):
 import csv
 
 
-def task2_indel(a, percent_error, filepath):
+def task2_indel_plot(a, percent_error, filepath):
     with open(filepath, newline='') as f:
         reader = csv.reader(f, quoting=csv.QUOTE_NONNUMERIC)
         data = list(reader)
@@ -331,12 +329,24 @@ def task2_indel(a, percent_error, filepath):
     plt.close()
 
 
+import timeit
 if __name__ == '__main__':
     a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG"
+
+    start = timeit.default_timer()
     task2(a, 0.1, "data/s_3_sequence_1M.txt")
+    stop = timeit.default_timer()
+
+    print('Time 10%: ', stop - start)
+
+    start = timeit.default_timer()
     task2(a, 0.25, "data/s_3_sequence_1M.txt")
+    stop = timeit.default_timer()
+    print('Time 25%: ', stop - start)
+
+
     print("Starting")
-    task2_indel(a, 0.1, "data/task2_data_10.csv")
-    task2_indel(a, 0.25, "data/task2_data_25.csv")
+    task2_indel_plot(a, 0.1, "data/task2_data_10.csv")
+    task2_indel_plot(a, 0.25, "data/task2_data_25.csv")
 
     print("Done")
