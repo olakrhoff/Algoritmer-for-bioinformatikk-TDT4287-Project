@@ -25,8 +25,9 @@ task5:
 	$(CC) $(CFLAGS) $(CURDIR)/src/task5/main.cpp $(CURDIR)/src/task4/keyword_tree.cpp -o $(CURDIR)/src/bin/task5
 
 clean:
-	$(ECHO $(CURDIR))
-	-rm -f $(CURDIR)/src/bin/*
+	$(ECHO $(CURDIR)) 
+	rm -f $(CURDIR)/src/bin/*
+	rm -f $(CURDIR)/plots/*
 
 run1: task1
 	./src/bin/task1
@@ -47,4 +48,7 @@ run5: task5
 	./src/bin/task5
 	python3 src/task5.py
 
-run_all: clean run1 run2 run3 run4 run5
+run_all: clean setup run1 run2 run3 run4 run5 teardown
+
+teardown:  
+	rm -f $(CURDIR)/data/*
